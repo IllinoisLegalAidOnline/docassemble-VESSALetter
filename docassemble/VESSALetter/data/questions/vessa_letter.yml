@@ -1,0 +1,991 @@
+metadata:
+  title: Request time off work after surviving violence
+  short title: Request time off work
+  comment:  This program helps you make a letter requesting time off work to deal with problems caused by domestic violence, sexual violence, or other violence.
+  authors:
+    - Vivian McNaughton
+    - Matt Newsted
+---
+include:
+  - docassemble.AssemblyLine:assembly_line.yml
+  - docassemble.ALToolbox:phone-number-validation.yml
+  - docassemble.ILAO:ilao-interview-framework.yml
+  - docassemble.ILAO:shared-basic-questions.yml
+---
+objects:
+  - user: ALIndividual
+  - employer: ALIndividual
+  - supervisor: ALIndividual
+  - hr_rep: ALIndividual
+---
+sections:
+  - review_answers: Review your answers
+---
+# Road map
+sections:
+  - section_intro: Start
+  - section_employer: Your employer
+  - section_time: Your time off
+  - section_user: About you
+  - section_download: Download
+---
+# interview order block
+mandatory: True
+code: |
+  ilao_easy_form_title = "Request time off work after surviving violence"
+  ilao_easy_form_url = "https://www.illinoislegalaid.org/legal-information/request-time-work-due-domestic-abuse-letter"
+  nav.set_section('section_intro')
+  sees_nav_bar
+  snapshot_start
+  set_progress(5)
+  how_to_use
+  accept_terms
+  get_legal_help
+  vessa_intro_a
+  vessa_intro_b
+  set_progress(20)
+  nav.set_section('section_employer')
+  if in_illinois == False:
+    out_of_state
+  if govt_employer == False:
+    employee_count
+  employer.name.first
+  employer.address.address
+  supervisor.name.first
+  set_progress(40)
+  #if hr_yes == True:
+    #hr_rep.name.first
+  nav.set_section('section_time')
+  time_off_intro
+  set_progress(60)
+  situation
+  off_why
+  if time_type == 'One day':
+    one_day_date
+  if time_type == 'subsequent':
+    if start_date > end_date:
+      end_date_error 
+    if situation == "my family member was killed in a crime of violence." or situation == "my household member was killed in a crime of violence.":
+      if int(date_difference(starting=start_date, ending=end_date).days) > 14:
+        two_week_error
+    else:
+      if govt_employer == True:
+        if int(date_difference(starting=start_date, ending=end_date).days) > 84:
+          twelve_week_error
+      elif govt_employer == False:
+        if employee_count == '50 or more employees':
+          if int(date_difference(starting=start_date, ending=end_date).days) > 84:
+            twelve_week_error
+        if employee_count == '15-49 employees':
+          if int(date_difference(starting=start_date, ending=end_date).days) > 56:
+            eight_week_error
+        if employee_count == '1-14 employees':
+          if int(date_difference(starting=start_date, ending=end_date).days) > 28:
+            four_week_error
+  if time_type == 'nuanced' :
+    spread_out
+  set_progress(80)
+  nav.set_section('section_user')
+  user.name.first
+  if contact_methods.all_true('Mail'):
+    user.address.address
+  if contact_methods.all_true('Phone'):
+    user.phone_number
+  if contact_methods.all_true('email'):
+    email_address 
+  mail_date
+  if add_signature:
+    user.signature
+  private_employer
+  set_progress(100)
+  nav.set_section('section_download')
+  forms_assembling
+  snapshot_forms
+  get_docs_screen 
+---
+code: |
+  stuff_to_snapshot = {
+  	'start_time': str(current_datetime().format_datetime()),
+  	'started_interview': True, 
+  	}
+    
+  try:
+    stuff_to_snapshot['ip_address'] = device(ip=True)
+  except:
+    pass  
+    
+  stuff_to_snapshot['user_zip'] = showifdef('user.address.zip')
+
+  stuff_to_snapshot['downloaded_forms'] = showifdef('forms_assembling')
+  
+  stuff_to_snapshot['govt_employer'] = showifdef('govt_employer') 
+  
+  stuff_to_snapshot['employee_count'] = showifdef('employee_count') 
+  
+  store_variables_snapshot(
+  	data=stuff_to_snapshot, persistent=True
+  	)
+  snapshot_interview_state = True
+---
+code: |
+  snapshot_interview_state
+  snapshot_start = True  
+---
+code: |
+  reconsider('snapshot_interview_state')
+  snapshot_forms = True
+---
+id: welcome
+question: |
+  Request time off work after surviving to violence
+subquestion: |
+  Welcome to Illinois Legal Aid Online's **Request time off work after surviving violence** Easy Form.
+
+  This program helps you make a letter requesting time off work to deal with problems caused by domestic violence, sexual violence, stalking, gender-based violence, or any other crime of violence.
+  
+  The letter you create can only be used in Illinois.
+field: sees_nav_bar
+---
+id: instructions
+continue button field: how_to_use
+question: |
+  Instructions
+subquestion: |
+  You can use this program if you are seeking time off from work to deal with domestic violence, sexual violence, stalking, gender-based violence, or any other crime of violence. You can also use it to take time off work if a family or household member has been killed in a crime of violence.
+  
+  To use this program, you will need the name and address of your employer.
+
+  Set aside 5 to 10 minutes to finish this program. You can log in and save your work to return to later. 
+
+  After you download your letter, you will need to mail it. This program does not mail it for you.
+  
+  ${ collapse_template(help_example) }  
+
+  Click on **{green words}** to learn what they mean. Some pages have a question mark in a circle ${ fa_icon("question-circle", color_css="#0DCAF0" ) } that helps explain things.
+---
+template: help_example
+
+subject: |
+
+  **You can click sections like this to show more information.**
+
+content: |  
+
+  This is an example of help. Click again to hide.
+---
+id: accept terms
+question: |
+  Terms of use
+subquestion: |
+  This program does not provide legal advice. It does not take the place of advice from a lawyer.
+
+  Using this program does not create an attorney-client relationship between you and Illinois Legal Aid Online or its employees.
+
+  ${ collapse_template(get_legal_help) }  
+
+fields:
+  - To continue, you must accept the [**terms of use**](https://www.illinoislegalaid.org/about/terms-of-use).: accept
+    datatype: checkboxes
+    none of the above: False
+    minlength: 1
+    choices:
+      - I accept the terms of use.
+    validation messages:
+      minlength: |
+        You cannot continue unless you agree to the terms of use.
+continue button field: accept_terms
+---
+template: get_legal_help
+subject: |
+  **What if I need legal advice?**
+content: |  
+  If you have questions or concerns about your legal problem and want legal advice you should talk to a lawyer.
+ 
+  Use [**Get Legal Help**](https://www.illinoislegalaid.org/get-legal-help) to find free or low-cost legal services in your area.
+---
+id: vessa explanation 1
+continue button field: vessa_intro_a
+question: |
+  Legal protections for time off
+subquestion: |
+  The Victims’ Economic Security and Safety Act (VESSA) became a law in Illinois in August, 2003. VESSA describes what employers must do to help survivors of **{domestic violence}**, **{sexual violence}**, **{stalking}**, **{gender-based violence}**, or any other crime of violence keep their jobs and stay safe.
+
+  You are protected by VESSA if you are a survivor of violence, or if you are helping a family or household member who is a survivor. VESSA also allows you to take time off work if your family or household member was killed by a crime of violence.
+  
+  ${ collapse_template(vessa_intro_b) }  
+terms:
+  sexual violence: |
+    Sexual violence can be sexual assault, non-consensual sexual acts, or sex with a minor.
+  domestic violence: |
+    Domestic violence can be physical abuse, harassment, or intimidation of family or other household members.
+  stalking: |
+    Stalking is when someone acts in a way they know, or should know, would make a normal person scared for their safety or feel emotional distress.
+  gender-based violence: |
+    Gender-based violence is violence targetting someone because of their sex or gender.
+---
+template: vessa_intro_b
+subject: |
+  **How much time off can I get?**
+content: |
+  The amount of unpaid time off you get under VESSA depends on the number of employees at your job, whether your employer is a government agency, and why you are taking time off.
+  
+  
+  This program will ask you questions about your employer to determine how much time off you can get.
+---
+id: user name
+question: |
+  What is your name?
+subquestion: |
+    If you don't have a first name and a last name, you can enter your name in the field labeled **First** and leave the other fields blank.
+fields:
+  - First: user.name.first
+  - Middle: user.name.middle
+    required: False
+  - Last: user.name.last
+    required: False
+  - Suffix: user.name.suffix
+    help: |
+      Some names have a suffix after the last name, such as "Senior," "III," or "Jr." If your name does not have a suffix, you can leave this blank.
+    code: |
+      name_suffix()
+    required: False
+---
+id: contact method
+question: |
+ What contact information do you want to include in your letter?
+fields:
+  - Contact methods: contact_methods
+    required: False
+    datatype: checkboxes
+    choices:
+      - Mail
+      - Phone
+      - Email: email
+    none of the above: False
+---
+id: your address
+question: |
+  What mailing address do you want to put on your letter?
+fields:
+  - Street address: user.address.address
+    address autocomplete: True
+  - Address line 2: user.address.unit
+    required: False
+  - City: user.address.city
+  - State: user.address.state
+    code: |
+      states_list() 
+  - ZIP code: user.address.zip
+---
+id: phone
+question: |
+  What phone number do you want to put on your letter?
+fields:
+  - Phone: user.phone_number
+    datatype: al_international_phone
+---
+id: email
+question: |
+  What email address do you want to put on your letter?
+fields:
+  - Email: email_address
+    datatype: email
+---
+id: in state check
+question: |
+  Do you work in Illinois?
+subquestion: |
+  ${ collapse_template(multi_state) }  
+fields:
+  - no label: in_illinois
+    datatype: yesnoradio
+---
+template: multi_state
+subject: |
+  **What if I work in multiple states?**
+content: |  
+  If your primary workplace is in Illinois, you can likely use this program. You may want to ask your employer if they are considered an Illinois employer. Your employment contract may have this information.
+---
+id: out of state kickout
+event: out_of_state
+question: |
+  Sorry
+subquestion: |
+  This program is can only be used for employees of Illinois employers.
+  
+  You can use the [**Legal Services Corporation website**](https://www.lsc.gov/about-lsc/what-legal-aid/get-legal-help) to find a legal aid organization in your employer's state.
+buttons:
+  - Exit: exit
+  - Restart: restart
+---
+id: employer type
+question: |
+  Do you work at a state or local government agency or a public school district?
+subquestion: |
+  ${ collapse_template(type_explainer) }  
+fields:
+  - no label: govt_employer
+    datatype: yesnoradio
+---
+template: type_explainer
+subject: |
+  **Why does this matter?**
+content: |  
+  The law requires that employers provide time off based on the number of employees.
+
+  * If your employer has 1-14 employees, you can get up to 4 weeks unpaid leave.
+  * If your employer has 15-49 employees, you can get up to 8 weeks unpaid leave.
+  * If your employer has 50 or more employees, or if you work for a government agency or a public school district, you can get up to 12 weeks unpaid leave.
+  
+  If you are taking time off because a family or household member was killed in a crime of violence, you can get up to 2 weeks unpaid leave regardless of the size of your employer.
+
+  Note: the number of weeks listed above must be used within a one-year period.
+---
+id: employees
+question: |
+  How many employees work for your employer?
+subquestion: |
+  If you do not know, take your best guess. If your employer has more than one location, add up the number employees.
+  
+  ${ collapse_template(type_explainer) } 
+fields:
+  - Number of employees: employee_count
+    input type: radio
+    choices: 
+      - '1-14 employees'
+      - '15-49 employees'
+      - '50 or more employees'
+---
+sets:
+  - employer.name.first
+id: employer name
+question: |
+  What is the name of your employer?
+subquestion: |
+  ${collapse_template(long_name_help)}
+fields:
+  - code: |
+      employer.name_fields(person_or_business='unsure')
+---
+template: long_name_help
+subject: |
+  **What if I need more space?**
+content: |
+  If the person has a long name like "Jane Elisa Carol Smith, CPA," select **Business or organization**. You can then enter the full name and title.
+---
+id: employer address
+question: |
+  What is ${ employer.name.first }'s address?
+fields:
+  - Street address: employer.address.address
+    address autocomplete: True
+  - Address line 2: employer.address.unit
+    required: False
+  - City: employer.address.city
+  - State: employer.address.state
+    code: |
+      states_list()
+    default: IL 
+  - ZIP code: employer.address.zip
+---
+id: supervisor name
+question: |
+  What is your supervisor's name?
+subquestion: |
+  If you do not have a supervisor, you can leave this section blank or enter the name of someone at the company you will send this letter to.
+fields:
+  - First: supervisor.name.first
+    required: False
+  - Middle: supervisor.name.middle
+    required: False
+  - Last: supervisor.name.last
+    required: False
+---
+id: is there hr
+question: |
+  Do you know who is in charge of Human Resources at ${ employer.name.full(middle='full')}?
+subquestion: |
+  This is usually the person who leads hiring and payroll. Their job title could be Director of Human Resources, Office Manager, or Administrator.
+fields:
+  - no label: hr_yes
+    datatype: yesnoradio
+---
+id: hr name
+question: |
+  Who is in charge of Human Resources at ${ employer.name.full(middle='full') }?
+subquestion: |
+  If you know only part of their name (first or last name), enter what you know.
+fields:
+  - First: hr_rep.name.first
+    required: False
+  - Middle: hr_rep.name.middle
+    required: False
+  - Last: hr_rep.name.last
+    required: False
+---
+id: same address
+question: |
+  Does ${hr_rep.name.full(middle='full')} use the same mailing address as ${employer.name.full(middle='full')}?
+subquestion: |
+   The address you listed earlier was ${employer.address.on_one_line(bare=True)}.
+fields:
+  - no label: same_address
+    datatype: yesnoradio
+---
+id: hr address
+question: |
+  What is ${hr_rep.name.full(middle='full')}'s address?
+fields:
+  - Street address: hr_rep.address.address
+    address autocomplete: True
+  - Address line 2: hr_rep.address.unit
+    required: False
+  - City: hr_rep.address.city
+  - State: hr_rep.address.state
+    code: |
+      states_list()
+    default: IL 
+  - ZIP code: hr_rep.address.zip
+---
+id: time off intro
+continue button field: time_off_intro
+question: |
+  Letter details
+subquestion: |
+  Your letter must include information about:
+
+  * Why you need time off work, and
+  * What you will do during that time off.
+
+  Note: Your employer may ask for proof that you are doing what you say you need to do during your time off.
+---
+id: user situation
+question: |
+  Why do you need time off work?
+fields:
+  - Your situation: situation
+    input type: radio
+    choices:
+      - I have experienced domestic violence.
+      - I have experienced sexual violence.
+      - I have experienced gender-based violence.
+      - I have been a victim of stalking.
+      - I have a family member experiencing violence.
+      - I have a household member experiencing violence.
+      - My family member was killed in a crime of violence.: my family member was killed in a crime of violence.
+      - My household member was killed in a crime of violence.: my household member was killed in a crime of violence.
+---
+id: plan
+question: |
+  What will you do with the time off?
+subquestion: |
+  You can take time off to:
+
+  * Seek **medical attention** for, or recovery from, physical or psychological injuries caused by sexual violence to you or your family or household members,
+  * Get **survivor services** for you or your family or household members,
+  * Get **counseling** for you or your family or household members, 
+  * Participate in **safety planning**, including making plans to stay with someone if you need to move quickly, finding numbers for emergencies, or gathering your IDs and important documents, or
+  * Seek **legal assistance** to ensure the health and safety of the survivor, including participating in court proceedings related to the violence.
+  
+  [**Learn more about making a security plan.**](https://www.illinoislegalaid.org/node/30281)
+
+  If a family or household member was killed in a crime of violence, you can take time off to:
+  
+  * **Attend the funeral** of the family or household member,
+  * **Arrange the funeral** of the family or household member, or
+  * **Grieve** the death of a family or household member.
+
+  Finish the sentence below.
+fields:
+  - 'I will need time off in order to...': off_why
+    input type: area
+---
+id: mail date
+question: |
+  When will you send your letter?
+subquestion: |
+  If possible, deliver your letter 48 hours before your requested time off begins.
+fields:
+  - Date: mail_date
+    datatype: date
+    min: ${ today() }
+---
+id: time off
+question: |
+  How much time do you need to take off work?
+subquestion: |
+  The amount of time your employer must give you depends on the number of employees, the type of employer, and why you are asking for time off work.
+  
+  % if situation == "my family member was killed in a crime of violence." or situation == "my household member was killed in a crime of violence.":
+  Based on your answers, your employer must give you up to 2 weeks unpaid leave.
+  % else:
+  % if govt_employer == True:
+  Based on your answers, your employer must give you up to 12 weeks unpaid leave.
+  % else:
+  % if employee_count == "50 or more employees":
+  Based on your answers, your employer must give you up to 12 weeks unpaid leave.
+  % elif employee_count == "15-49 employees":
+  Based on your answers, your employer must give you up to 8 weeks unpaid leave.
+  % else:
+  Based on your answers, your employer must give you up to 4 weeks unpaid leave.
+  % endif
+  % endif
+  % endif
+fields:
+  - label: Amount of time 
+    field: time_type
+    input type: radio
+    choices:
+      - One day
+      - 'Several days or weeks in a row (you can enter a start and end date)' : subsequent
+      - 'A few hours or days spread out over many weeks or months (you can explain how this works)' : nuanced
+---
+id: one day date
+question: |
+  When do you need time off work?
+fields:
+  - Date: one_day_date
+    datatype: date
+    min: ${ today() }
+---
+id: several days
+question: |
+  When do you need time off work?
+fields:
+  - Start date: start_date
+    datatype: date
+    min: ${ today() }
+  - End date: end_date
+    datatype: date
+    min: ${ today() }
+---
+id: twelve week error
+continue button field: twelve_week_error
+question: |
+  The time frame you requested might be too long
+subquestion: |
+  Under VESSA, based on the number of employees at your job or the type of employer, you are allowed to take **only up to 12 work weeks** (84 calendar days or 60 business days) of unpaid leave.
+
+  Click **Back** to correct the dates you wish to request for leave.
+
+  There might be holidays or other days off between ${ start_date } and ${ end_date }. If the number of business days off you are requesting is 60 or fewer, click **Next**.
+---
+id: 2 week error
+continue button field: two_week_error
+question: |
+  The time frame you requested might be too long
+subquestion: |
+  Under VESSA, you are allowed to take **only up to 2 work weeks** of unpaid leave to grieve, attend the funeral of, or make arrangements for a family or household member who was killed in a crime of violence.
+  
+   Click **Back** to correct the dates you wish to request for leave.
+
+  There might be holidays or other days off between ${ start_date } and ${ end_date }. If the number of business days off you are requesting is 10 or fewer, click **Next**.
+---
+id: 8 week error
+continue button field: eight_week_error
+question: |
+  The time frame you requested might be too long
+subquestion: |
+  Under VESSA, based on the number of employees at your job, you are allowed to take **only up to 8 work weeks** (56 calendar days or 40 business days) of unpaid leave.
+
+  Click **Back** to correct the dates you wish to request for leave.
+
+  There might be holidays or other days off between ${ start_date } and ${ end_date }. If the number of business days off you are requesting is 40 or fewer, click **Next**.
+---
+id: 4 week error
+continue button field: four_week_error
+question: |
+  The time frame you requested might be too long
+subquestion: |
+  Under VESSA, based on the number of employees at your job, you are allowed to take **only up to 4 work weeks** (28 calendar days or 20 business days) of unpaid leave.
+
+  Click **Back** to correct the dates you wish to request for leave.
+
+  There might be holidays or other days off between ${ start_date } and ${ end_date }. If the number of business days off you are requesting is 20 or fewer, click **Next**.
+---
+id: end date error
+event: end_date_error
+question: |
+  The end date for the time you are requesting off is before the start date.
+subquestion: |
+  Pleace click the **Back** button and correct the dates.
+---
+id: spread out time off
+question: |
+  When do you need to take off work?
+subquestion: |
+  You should use complete sentences.
+  
+  ${ collapse_template(spread_out_explainer) } 
+fields:
+  - label: Describe work schedule changes
+    field: spread_out
+    datatype: area
+    rows: 10
+    maxlength: 1500
+---
+template: spread_out_explainer
+subject: |
+  **What should my answer look like?**
+content: |  
+  Your answer will depend on your circumstances. Some examples:
+
+  * "I will need to leave work by 3:00 pm every Thursday for the next 3 months."
+  * "I will need to take the morning off work for at least three court hearings this year."
+  * "I will need to take off work on 5/7/19 to meet with my lawyer, and on 5/21/19 to attend domestic abuse counseling."
+---
+id: add signature
+question: |
+  Do you want to add your signature to the letter now?
+subquestion: |
+  If you do not add your signature, you will have to sign your letter by hand.
+fields:
+  - no label: add_signature
+    datatype: yesnoradio
+---
+id: signature
+question: |
+  Sign your name
+subquestion: |
+  Use the mouse or touchpad on your computer or sign with your finger on your phone.
+signature: user.signature
+under: |
+  ${ user.name.full(middle='full')}
+---
+id: forms assembling
+continue button field: forms_assembling
+question: |
+  Almost done
+subquestion: |
+  After you click **Next**, it may take a few moments to finish making your forms.
+  
+  ###### You do not need to refresh your screen. Hang in there!
+  
+  [NEWLINE]
+---
+id: get docs screen
+event: get_docs_screen
+question: |
+  Download
+subquestion: |
+  Your letter is ready. View and download your letter and instructions below. Click **Make changes** to fix any mistakes.
+  
+  Read the instructions to learn what to do next.
+
+  Thank you for using ILAO Easy Forms!
+  
+  ${ action_button_html(url_action('review_answers'), label=':edit: Make changes', color='success', size="md") }
+
+  ${ al_user_bundle.download_list_html() }
+ 
+  &nbsp;
+
+  ${ al_user_bundle.send_button_html(show_editable_checkbox=False) }
+  
+  **Note:** This program does not send your letter. You will need to do this yourself.
+
+  Thank you for using ILAO Easy Forms!
+under: |
+  % if not user_logged_in():
+  [${fa_icon("sign-in-alt", color="#0079d0", size="sm")} Sign-in](${url_of('login', next=interview_url())}) or [create](${url_of('register', next=interview_url())}) an ILAO Easy Form account to save your progress (optional).
+  % endif
+
+ 
+  ${ action_button_html(interview_url(i="docassemble.ILAO:feedback.yml", easy_form_interview=ilao_easy_form_url, easy_form_title=ilao_easy_form_title, easy_form_page=current_context().question_id, easy_form_variable=current_context().variable, local=False,reset=1), label=':comment: Was this program helpful?', color="#181c36", size="md", new_window=True) }
+#buttons:
+  #- Exit: exit
+---
+generic object: ALDocumentBundle
+template: x.send_email_template
+subject: |
+  Request time off work after surviving violence
+content: |
+  Your forms are attached.
+  
+  Thanks for using ILAO Easy Forms!
+  
+  [**Illinois Legal Aid Online**](https://www.illinoislegalaid.org)
+---
+attachment:
+  name: VESSA letter
+  variable name: letter[i]
+  filename: vessa_letter
+  docx template file: vessa_letter_da_template.docx
+---
+attachment:
+  name: Instructions for VESSA letter
+  variable name: instructions[i]
+  filename: instructions_for_vessa_letter
+  docx template file: vessa_letter_da_instructions.docx
+---
+objects:
+  - letter: ALDocument.using(title="Letter", filename="letter", enabled=True, has_addendum=False)
+  - instructions: ALDocument.using(title="Instructions", filename="instructions", enabled=True, has_addendum=False)
+---
+objects:
+  - al_user_bundle: ALDocumentBundle.using(elements=[instructions, letter], filename="request_time_off_work_due_to_domestic_violence.pdf", title="Download all forms")
+---
+depends on:
+  - govt_employer
+code: |
+  if govt_employer == False:
+    private_employer = True
+  if govt_employer == True:
+    private_employer = False
+---
+id: review screen
+event: review_answers
+question: |
+  Review screen
+subquestion: |
+  Edit your answers below.
+review:
+  - Edit: user.name.first
+    button: |
+      **Your name:**
+      ${user.name.full(middle='full')}
+  - Edit: contact_methods
+    button: |
+      **Contact information included in your letter:**
+      
+      % if contact_methods.all_true('Mail'):
+        * Address      
+      % endif
+      % if contact_methods.all_true('Phone'):
+        * Phone       
+      % endif
+      % if contact_methods.all_true('email'):
+        * Email
+      % endif
+  - Edit: user.address.address
+    button: |
+      **Your address:**
+      ${user.address.on_one_line(bare=True)}
+    show if: contact_methods.all_true('Mail')
+  - Edit: user.phone_number
+    button: |
+      **Your phone number:**
+      ${phone_number_formatted(user.phone_number)}
+    show if: contact_methods.all_true('Phone')
+  - Edit: email_address
+    button: |
+      **Your email address**:
+      ${email_address}
+    show if: contact_methods.all_true('email')
+  - Edit: govt_employer
+    button: |
+      **Do you work at a state or local government agency or a public school district?**
+      ${word(yesno(govt_employer))}
+  - Edit: employee_count
+    button: |
+      **How many employees work for your employer?**
+      ${employee_count}
+    show if: not govt_employer
+  - Edit: employer.name.first
+    button: |
+      **Your employer's name:**
+      ${employer.name.first}
+  - Edit: employer.address.address
+    button: |
+      **Your employer's address:**
+      ${employer.address.on_one_line(bare=True)}
+  - Edit: supervisor.name.first
+    button: |
+      **Your supervisor's name:**
+      ${ supervisor.name.full(middle='full')}
+  #- Edit: hr_yes
+    #button: |
+      #**Do you know the name of the person in charge of Human Resources (HR)?**
+      #${ word(yesno(hr_yes)) }
+  #- Edit: hr_rep.name.first
+    #button: |
+      #**Person in charge of HR:**
+       #${hr_rep.name.full(middle="full")}
+    #show if: hr_yes
+  - Edit: situation
+    button: |
+      **Your situation:**
+      ${ capitalize(situation) }
+  - Edit: off_why
+    button: |
+      **You will need time off in order to:**
+      ${ off_why }
+  - Edit: mail_date
+    button: |
+      ** Mailing date:**
+      ${mail_date}
+  - Edit: time_type
+    button: |
+      **How much time do you need to take off work?**
+      % if time_type == 'One day':
+        One day
+      % endif
+      % if time_type == 'subsequent':
+        Several days or weeks in a row
+      % endif
+      % if time_type == 'nuanced':
+        A few hours or days spread out over many weeks or months
+      % endif
+  - Edit: one_day_date
+    button: |
+      **When do you need to take time off work?**
+      ${ one_day_date }
+    show if: time_type == 'One day'
+  - Edit: start_date
+    button: |
+      **When do you need to take time off work?**
+      ${start_date} to ${end_date}
+    show if: time_type == 'subsequent'
+  - Edit: spread_out
+    button: |
+      **When do you need to take time off work?**
+      ${ spread_out}
+    show if: time_type == 'nuanced'
+  - Edit: add_signature
+    button: |
+      **Do you want to add an electronic signature?**
+      ${word(yesno(add_signature))}
+  - Edit: user.signature
+    button: |
+      **Signature:**
+      
+      ${ user.signature }
+    show if: add_signature
+---
+id: employer review screen
+event: section_employer
+section: Your employer
+question: |
+  Your employer
+subquestion: |
+  Edit your answers below.
+review:
+  - Edit: govt_employer
+    button: |
+      **Do you work at a state or local government agency or a public school district?**
+      ${word(yesno(govt_employer))}
+  - Edit: employee_count
+    button: |
+      **How many employees work for your employer?**
+      ${employee_count}
+    show if: not govt_employer
+  - Edit: employer.name.first
+    button: |
+      **Your employer's name:**
+      ${employer.name.first}
+  - Edit: employer.address.address
+    button: |
+      **Your employer's address:**
+      ${employer.address.on_one_line(bare=True)}
+  - Edit: supervisor.name.first
+    button: |
+      **Your supervisor's name:**
+      ${ supervisor.name.full(middle='full')}
+  #- Edit: hr_yes
+    #button: |
+      #**Do you know the name of the person in charge of Human Resources (HR)?**
+      #${ word(yesno(hr_yes)) }
+  #- Edit: hr_rep.name.first
+    #button: |
+      #**Person in charge of HR:**
+       #${hr_rep.name.full(middle="full")}
+    #show if: hr_yes
+---
+id: time review screen
+section: Your time off
+event: section_time
+question: |
+  Your time off
+subquestion: |
+  Edit your answers below.
+review:
+  - Edit: situation
+    button: |
+      **Your situation:**
+      ${ capitalize(situation) }
+  - Edit: off_why
+    button: |
+      **You will need time off in order to:**
+      ${ off_why }
+  - Edit: time_type
+    button: |
+      **How much time do you need to take off work?**
+      % if time_type == 'One day':
+        One day
+      % endif
+      % if time_type == 'subsequent':
+        Several days or weeks in a row
+      % endif
+      % if time_type == 'nuanced':
+        A few hours or days spread out over many weeks or months
+      % endif
+  - Edit: one_day_date
+    button: |
+      **When do you need to take time off work?**
+      ${ one_day_date }
+    show if: time_type == 'One day'
+  - Edit: start_date
+    button: |
+      **When do you need to take time off work?**
+      ${start_date} to ${end_date}
+    show if: time_type == 'subsequent'
+  - Edit: spread_out
+    button: |
+      **When do you need to take time off work?**
+      ${ spread_out}
+    show if: time_type == 'nuanced'
+---
+id: user review screen
+section: About you
+event: section_user
+question: |
+  About you
+subquestion: |
+  Edit your answers below.
+review:
+  - Edit: user.name.first
+    button: |
+      **Your name:**
+      ${user.name.full(middle='full')}
+  - Edit: contact_methods
+    button: |
+      **Contact information included in your letter:**
+      
+      % if contact_methods.all_true('Mail'):
+        * Address      
+      % endif
+      % if contact_methods.all_true('Phone'):
+        * Phone       
+      % endif
+      % if contact_methods.all_true('email'):
+        * Email
+      % endif
+  - Edit: user.address.address
+    button: |
+      **Your address:**
+      ${user.address.on_one_line(bare=True)}
+    show if: contact_methods.all_true('Mail')
+  - Edit: mail_date
+    button: |
+      ** Mailing date:**
+      ${mail_date}
+  - Edit: user.phone_number
+    button: |
+      **Your phone number:**
+      ${phone_number_formatted(user.phone_number)}
+    show if: contact_methods.all_true('Phone')
+  - Edit: email_address
+    button: |
+      **Your email address**:
+      ${email_address}
+    show if: contact_methods.all_true('email')
+  - Edit: add_signature
+    button: |
+      **Do you want to add an electronic signature?**
+      ${word(yesno(add_signature))}
+  - Edit: user.signature
+    button: |
+      **Signature:**
+      
+      ${ user.signature }
+    show if: add_signature
