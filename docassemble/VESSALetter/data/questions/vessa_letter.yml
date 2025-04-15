@@ -210,7 +210,7 @@ question: |
 subquestion: |
   The Victims’ Economic Security and Safety Act (VESSA) became a law in Illinois in August, 2003. VESSA describes what employers must do to help survivors of **{domestic violence}**, **{sexual violence}**, **{stalking}**, **{gender-based violence}**, or any other crime of violence keep their jobs and stay safe.
 
-  You are protected by VESSA if you are a survivor of violence, or if you are helping a family or household member who is a survivor. VESSA also allows you to take time off work if your family or household member was killed by a crime of violence.
+  You are protected by VESSA if you are a survivor of domestic violence or sexual violence, or if you are helping a family or household member who is a survivor. VESSA also allows you to take time off work if your family or household member was killed by a crime of violence.
   
   ${ collapse_template(vessa_intro_b) }  
 terms:
