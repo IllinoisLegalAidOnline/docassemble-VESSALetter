@@ -403,7 +403,7 @@ fields:
 ---
 id: is there hr
 question: |
-  Do you know who is in charge of Human Resources at ${ employer.name.full(middle='full')}?
+  Do you know who is in charge of Human Resources at ${ employer.name_full()}?
 subquestion: |
   This is usually the person who leads hiring and payroll. Their job title could be Director of Human Resources, Office Manager, or Administrator.
 fields:
@@ -412,7 +412,7 @@ fields:
 ---
 id: hr name
 question: |
-  Who is in charge of Human Resources at ${ employer.name.full(middle='full') }?
+  Who is in charge of Human Resources at ${ employer.name_full() }?
 subquestion: |
   If you know only part of their name (first or last name), enter what you know.
 fields:
@@ -425,7 +425,7 @@ fields:
 ---
 id: same address
 question: |
-  Does ${hr_rep.name.full(middle='full')} use the same mailing address as ${employer.name.full(middle='full')}?
+  Does ${hr_rep.name_full()} use the same mailing address as ${employer.name_full()}?
 subquestion: |
    The address you listed earlier was ${employer.address.on_one_line(bare=True)}.
 fields:
@@ -434,7 +434,7 @@ fields:
 ---
 id: hr address
 question: |
-  What is ${hr_rep.name.full(middle='full')}'s address?
+  What is ${hr_rep.name_full()}'s address?
 fields:
   - Street address: hr_rep.address.address
     address autocomplete: True
@@ -650,7 +650,7 @@ subquestion: |
   Use the mouse or touchpad on your computer or sign with your finger on your phone.
 signature: user.signature
 under: |
-  ${ user.name.full(middle='full')}
+  ${ user.name_full()}
 ---
 id: forms assembling
 continue button field: forms_assembling
@@ -743,7 +743,7 @@ review:
   - Edit: user.name.first
     button: |
       **Your name:**
-      ${user.name.full(middle='full')}
+      ${user.name_full()}
   - Edit: contact_methods
     button: |
       **Contact information included in your letter:**
@@ -792,7 +792,7 @@ review:
   - Edit: supervisor.name.first
     button: |
       **Your supervisor's name:**
-      ${ supervisor.name.full(middle='full')}
+      ${ supervisor.name_full()}
   #- Edit: hr_yes
     #button: |
       #**Do you know the name of the person in charge of Human Resources (HR)?**
@@ -800,7 +800,7 @@ review:
   #- Edit: hr_rep.name.first
     #button: |
       #**Person in charge of HR:**
-       #${hr_rep.name.full(middle="full")}
+       #${hr_rep.name_full()}
     #show if: hr_yes
   - Edit: situation
     button: |
@@ -880,7 +880,7 @@ review:
   - Edit: supervisor.name.first
     button: |
       **Your supervisor's name:**
-      ${ supervisor.name.full(middle='full')}
+      ${ supervisor.name_full()}
   #- Edit: hr_yes
     #button: |
       #**Do you know the name of the person in charge of Human Resources (HR)?**
@@ -888,7 +888,7 @@ review:
   #- Edit: hr_rep.name.first
     #button: |
       #**Person in charge of HR:**
-       #${hr_rep.name.full(middle="full")}
+       #${hr_rep.name_full()}
     #show if: hr_yes
 ---
 id: time review screen
@@ -946,7 +946,7 @@ review:
   - Edit: user.name.first
     button: |
       **Your name:**
-      ${user.name.full(middle='full')}
+      ${user.name_full()}
   - Edit: contact_methods
     button: |
       **Contact information included in your letter:**
